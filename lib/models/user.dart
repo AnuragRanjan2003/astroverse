@@ -10,10 +10,19 @@ class User {
   String uid;
   int plan;
   final bool astro;
-  final String phNo;
+  String phNo;
+  String upiID;
 
-  User(this.name, this.email, this.image, this.plan, this.uid, this.astro,
-      this.phNo);
+  User(
+    this.name,
+    this.email,
+    this.image,
+    this.plan,
+    this.uid,
+    this.astro,
+    this.phNo,
+    this.upiID,
+  );
 
   factory User.fromJson(json) => _$UserFromJson(json);
 
