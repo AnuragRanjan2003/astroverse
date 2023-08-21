@@ -1,7 +1,7 @@
 # astroverse
 
-A astrology based mobile application which connects astrologers to user directly.
-Application is built useng **Flutter**.
+A astrology based mobile application which connects astrologers directly to user.
+Application is built using **Flutter**.
 
 ## Features
  Read the features required from the given 
