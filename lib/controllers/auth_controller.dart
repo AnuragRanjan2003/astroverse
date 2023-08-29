@@ -17,6 +17,7 @@ import 'package:image_picker/image_picker.dart';
 class AuthController extends GetxController {
   Rxn<models.User> user = Rxn<models.User>();
   Rx<bool> loading = false.obs;
+  Rx<bool> userLoading = false.obs;
   Rxn<String> error = Rxn<String>();
   StreamSubscription<DocumentSnapshot<models.User>>? _sub;
   Rx<String> pass = "".obs;
@@ -27,6 +28,7 @@ class AuthController extends GetxController {
   Timer? _timer;
   Timer? _resendTimerInstance;
   Rx<int> resendTimer = 60.obs;
+  Rx<int> astroPlanSelected = Rx(0);
 
   @override
   void onInit() async {
@@ -38,6 +40,7 @@ class AuthController extends GetxController {
         emailVerified.value = _repo.checkIfEmailVerified();
         if (emailVerified.value == true) {
           // TODO( change to offAndToNamed)
+          return;
           Get.toNamed(Routes.main);
         }
       }
@@ -67,8 +70,11 @@ class AuthController extends GetxController {
   }
 
   startListeningToUser(String uid) {
+    userLoading.value = true;
     _sub = _repo.getUserStream(uid).listen((event) {
       debugPrint("user:${event.data()}");
+      userLoading.value = false;
+      debugPrint("user loading : ${loading.value}");
       if (event.data() != null) user.value = event.data()!;
     });
   }
@@ -123,6 +129,49 @@ class AuthController extends GetxController {
     super.onClose();
   }
 
+  createUserWithEmailForAstro(
+      models.User user, String password, void Function(Resource) updateUI) {
+    user.plan = selectedPlan.value;
+    if(user.plan<2) user.plan = 2;
+    String path = BackEndStrings.defaultImage;
+    if (image.value != null) path = image.value!.path;
+    loading.value = true;
+    _repo.createUser(user, password).then((event) {
+      debugPrint(event.toString());
+      if (event.isSuccess) {
+        event = event as Success<UserCredential>;
+        user.uid = event.data.user!.uid;
+        if (image.value != null) {
+          _repo
+              .storeProfileImage(File(path), event.data.user!.uid)
+              .then((task) {
+            if (task.isSuccess) {
+              debugPrint("image uploaded");
+              user.image = (task as Success<String>).data;
+              saveData(user, (p0) {
+                loading.value = false;
+                updateUI(p0);
+              }, (event as Success<UserCredential>).data);
+            } else {
+              loading.value = false;
+            }
+          });
+        } else {
+          user.image = BackEndStrings.defaultImage;
+          saveData(user, (p0) {
+            loading.value = false;
+            updateUI(p0);
+          }, event.data);
+        }
+      } else {
+        loading.value = false;
+        event = event as Failure<UserCredential>;
+        error.value = event.error;
+        updateUI(event);
+      }
+    });
+  }
+
   void saveData(models.User user, void Function(Resource<void>) updateUI,
       UserCredential event) {
     _repo.saveUserData(user).then((value) {
@@ -140,7 +189,7 @@ class AuthController extends GetxController {
     });
   }
 
-  sendVerificationEmail() {
+  sendVerificationEmail( void Function() onVerified ) {
     resendTimer.value = 60;
     startResendCountdown();
     _repo.sendEmailVerificationEmail().then((value) {
@@ -148,6 +197,7 @@ class AuthController extends GetxController {
       if (value.isSuccess) {
         Get.snackbar("Email", (value as Success<String>).data);
         startEmailVerificationCheck(() {
+          onVerified();
           debugPrint("email verified");
         });
       } else {
@@ -161,6 +211,7 @@ class AuthController extends GetxController {
       emailVerified.value = _repo.checkIfEmailVerified();
       debugPrint("checking email verification");
       if (emailVerified.value == true) {
+        debugPrint("email verified");
         onVerified();
         timer.cancel();
         _timer?.cancel();

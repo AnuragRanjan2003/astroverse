@@ -16,7 +16,7 @@ class AskScreenPortrait extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final auth = Get.put(AuthController());
+    final AuthController auth = Get.put(AuthController());
     final double wd = cons.maxWidth;
     final double ht = cons.maxHeight;
     return Scaffold(
@@ -60,7 +60,7 @@ class AskScreenPortrait extends StatelessWidget {
                 height: 15,
               ),
               MaterialButton(
-                onPressed: () {},
+                onPressed: navigateToAstroLogin,
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 color: ProjectColors.main,
                 shape: ButtonDecors.filled,
@@ -78,5 +78,9 @@ class AskScreenPortrait extends StatelessWidget {
 
   void navigateToUserLogin() {
     Get.toNamed(Routes.userLogin);
+  }
+
+  void navigateToAstroLogin() {
+    Get.toNamed(Routes.astroLogin);
   }
 }
