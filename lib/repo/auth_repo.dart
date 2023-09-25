@@ -9,7 +9,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../db/auth.dart';
 import '../db/db.dart';
-import '../models/post.dart';
 
 class AuthRepo {
   final _auth = Auth();
@@ -33,6 +32,8 @@ class AuthRepo {
   Stream<DocumentSnapshot<models.User>> getUserStream(String id) =>
       _db.getUserStream(id);
 
+  Future<Resource<DocumentSnapshot<models.User>>> getUserData(String uid) async => await _db.getUserData(uid);
+
   Future<Resource<String>> sendEmailVerificationEmail() async =>
       await _auth.sendVerificationEmail();
 
@@ -44,12 +45,11 @@ class AuthRepo {
   Future<bool> checkForUserData(String uid) async =>
       await _db.checkForUserData(uid);
 
-  Future<void> sendOtp(PhoneAuthCallbacks callbacks ,  String number) async =>
-      await _auth.sendOtp(callbacks,number);
+  Future<void> sendOtp(PhoneAuthCallbacks callbacks, String number) async =>
+      await _auth.sendOtp(callbacks, number);
 
-  Future<bool> checkOTP(PhoneAuthCredential cred) async => await _auth.checkOtp(cred);
-
-
+  Future<bool> checkOTP(PhoneAuthCredential cred) async =>
+      await _auth.checkOtp(cred);
 
   Future<void> logOut() async => await _auth.logOut();
 }

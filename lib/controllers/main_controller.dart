@@ -1,5 +1,9 @@
+import 'dart:async';
 import 'dart:developer';
 
+import 'package:astroverse/controllers/new_page_controller.dart';
+import 'package:astroverse/models/post_save.dart';
+import 'package:astroverse/models/user.dart';
 import 'package:astroverse/repo/post_repo.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
@@ -13,10 +17,25 @@ class MainController extends GetxController {
   Rx<bool> morePostsToLoad = true.obs;
   Rxn<QueryDocumentSnapshot<Post>> lastPost = Rxn();
   static const _maxPostLimit = 50;
+  Rx<bool> nothingToShow = false.obs;
+  Rx<bool> loadingMorePosts = false.obs;
+  RxList<PostSave> upVotedPosts = <PostSave>[].obs;
+  Rxn<User> user = Rxn();
+  StreamSubscription<DocumentSnapshot<String>>? likes;
 
   @override
   void onInit() {
-    fetchPostsByGenreAndPage(["a", "b"]);
+    fetchPostsByGenreAndPage(NewPageController.genresList);
+  }
+
+  void setUser(User? user) {
+    this.user.value = user;
+    if (this.user.value != null) startReadingUpVotedPosts(this.user.value!.uid);
+  }
+
+  @override
+  void onClose() {
+    likes?.cancel();
   }
 
   void savePost(Post post, void Function(Resource<Post>) updateUI) {
@@ -32,7 +51,9 @@ class MainController extends GetxController {
     } else {
       log(lastPost.value!.data().toString(), name: "LP");
     }
+    loadingMorePosts.value = true;
     _postRepo.fetchPostsByGenreAndPage(genre).then((value) {
+      loadingMorePosts.value = false;
       if (value.isSuccess) {
         value = value as Success<List<QueryDocumentSnapshot<Post>>>;
         List<Post> list = [];
@@ -42,10 +63,11 @@ class MainController extends GetxController {
             lastPost.value = element;
           }
         }
-        log("${lastPost.value!.data()}", name: "IS NULL");
+        //log("${lastPost.value!.data()}", name: "IS NULL");
         log(list.length.toString(), name: "GOT LIST SIZE");
         log(list.toString(), name: "GOT LIST");
         postList.value = list;
+        nothingToShow.value = list.isEmpty;
         log(postList.length.toString(), name: "POST LIST SUCCESS");
       } else {
         value = value as Failure<List<QueryDocumentSnapshot<Post>>>;
@@ -56,8 +78,12 @@ class MainController extends GetxController {
 
   void fetchMorePosts(List<String> genre) {
     log("loading more posts", name: "POST LIST");
-    if (morePostsToLoad.value == false) return;
+    if (morePostsToLoad.value == false || postList.length >= _maxPostLimit)
+      return;
+    loadingMorePosts.value = true;
+
     _postRepo.fetchMorePost(lastPost.value!, genre).then((value) {
+      loadingMorePosts.value = false;
       if (value.isSuccess) {
         value = value as Success<List<QueryDocumentSnapshot<Post>>>;
         List<Post> list = [];
@@ -71,7 +97,8 @@ class MainController extends GetxController {
         log("${lastPost.value!.data()}", name: "IS NULL");
         log(list.length.toString(), name: "GOT LIST SIZE");
         log(list.toString(), name: "GOT LIST");
-        postList.value = list;
+        postList.addAll(list);
+        morePostsToLoad.value = list.isNotEmpty;
         log(postList.length.toString(), name: "POST LIST SUCCESS");
       } else {
         value = value as Failure<List<QueryDocumentSnapshot<Post>>>;
@@ -80,14 +107,75 @@ class MainController extends GetxController {
     });
   }
 
-  void refreshPosts() {
+  void refreshPosts(List<String> genre) {
     clearPosts();
-    fetchPostsByGenreAndPage(["a", "b"]);
+    log(genre.toString(), name: "GENRES");
+    fetchPostsByGenreAndPage(genre);
+  }
+
+  void increaseVote(String id, String uid, Function() onComplete) {
+    final e = postList.indexWhere((element) => element.id == id);
+    postList[e].upVotes++;
+    postList.refresh();
+    _postRepo.increaseVote(id, uid).then((value) {
+      if (value.isSuccess) {
+        log("up voted");
+
+        log('upvoted to : ${postList[e].upVotes}', name: "UPVOTES");
+        onComplete();
+      }
+    });
+  }
+
+  void decrementVote(String id, String uid, Function() onComplete) {
+    final e = postList.indexWhere((element) => element.id == id);
+    postList[e].upVotes--;
+    postList.refresh();
+    _postRepo.decreaseVote(id, uid).then((value) {
+      if (value.isSuccess) {
+        log("down voted");
+        log('upvoted to : ${postList[e].upVotes}', name: "UPVOTES");
+        onComplete();
+      }
+    });
+  }
+
+  void startReadingUpVotedPosts(String? uid) {
+    log("reading upvotes", name: "UPVOTES");
+    likes?.cancel();
+    var list = <PostSave>[];
+    if (uid == null) return;
+    _postRepo.upVotedPostStream(uid, postList).listen((event) {
+      log("liked changed", name: "UPVOTES");
+      for (var it in event.docs) {
+        list.add(it.data());
+      }
+      upVotedPosts.clear();
+      upVotedPosts.value = list;
+      upVotedPosts.refresh();
+      log(upVotedPosts.toString(), name: "UPVOTED");
+    });
   }
 
   void clearPosts() {
     postList.clear();
     lastPost.value = null;
     morePostsToLoad.value = true;
+  }
+
+  int filteredLength(List<String> l) {
+    int n = 0;
+    for (var it in postList) {
+      if (areEqual(it.genre, l)) n++;
+    }
+
+    return n;
+  }
+
+  bool areEqual(List l1, List l2) {
+    if (l1.length == l2.length && l1.every((element) => l2.contains(element))) {
+      return true;
+    }
+    return false;
   }
 }

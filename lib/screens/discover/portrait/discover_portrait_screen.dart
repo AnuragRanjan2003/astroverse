@@ -2,8 +2,10 @@ import 'dart:developer';
 
 import 'package:astroverse/components/new_posts_page.dart';
 import 'package:astroverse/controllers/main_controller.dart';
+import 'package:astroverse/routes/routes.dart';
 import 'package:astroverse/utils/resource.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 
 import '../../../controllers/auth_controller.dart';
@@ -27,25 +29,31 @@ class DiscoverScreenPortrait extends StatelessWidget {
       length: 2,
       child: Scaffold(
         backgroundColor: color,
-        floatingActionButton: (auth.user.value?.astro == true)
-            ? FloatingActionButton(
-                onPressed: () {
-                  _testPost(main , index);
-                  index++;
-                },
-                backgroundColor: Colors.lightBlue.withAlpha(150),
-                elevation: 0,
-                child: const Icon(
-                  Icons.add,
-                  color: Colors.white,
-                ),
-              )
-            : null,
-        body: Container(
+        floatingActionButton: Obx(() {
+          if (auth.user.value?.astro == true) {
+            return FloatingActionButton(
+              onPressed: () {
+                Get.toNamed(Routes.createPostScreen);
+              },
+              backgroundColor: Colors.lightBlue.shade300,
+              elevation: 0,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(50))),
+              child: const FaIcon(
+                FontAwesomeIcons.penNib,
+                color: Colors.white,
+                size: 17,
+              ),
+            );
+          }
+          return const SizedBox(
+            height: 0,
+          );
+        }),
+        body: SizedBox(
             width: wd,
-            child: const Column(
+            child: Column(
               children: [
-                TabBar(
+                const TabBar(
                   indicatorColor: Colors.lightBlue,
                   labelColor: Colors.lightBlue,
                   tabs: [
@@ -60,9 +68,11 @@ class DiscoverScreenPortrait extends StatelessWidget {
                 Expanded(
                   child: TabBarView(children: [
                     Center(
-                      child: NewPostsPage(),
+                      child: NewPostsPage(
+                        cons: cons,
+                      ),
                     ),
-                    Center(
+                    const Center(
                       child: Text("following"),
                     ),
                   ]),
@@ -73,14 +83,14 @@ class DiscoverScreenPortrait extends StatelessWidget {
     );
   }
 
-  _testPost(MainController controller , int index) {
+  _testPost(MainController controller, int index) {
     final post = Post(
       id: "12123234",
       title: "$index",
-      description: "asdasdsdadsasd",
+      description: "asdasdsdadsasdasdjaasjka",
       genre: ["a", "b"],
       date: DateTime.timestamp(),
-      imageUrl: "213213",
+      imageUrl: "",
       upVotes: 20,
       downVotes: 10,
       authorName: "abc",
@@ -88,7 +98,7 @@ class DiscoverScreenPortrait extends StatelessWidget {
     );
 
     controller.savePost(post, (p0) {
-      if(p0.isSuccess) {
+      if (p0.isSuccess) {
         log((p0 as Success<Post>).data.toString(), name: "POST");
       }
     });
