@@ -1441,10 +1441,10 @@ packages:
     dependency: transitive
     description:
       name: zego_plugin_adapter
-      sha256: "298dcba14e97c2f0389d7de4e73ff35b7b5ff2db1eb7f94d678e779dd8a9250d"
+      sha256: "6cc7059fef783fb883220e63d1554a48f4cb0f965aa792cd08afee712294b325"
       url: "https://pub.dev"
     source: hosted
-    version: "2.8.2"
+    version: "2.9.0"
   zego_uikit:
     dependency: transitive
     description:
@@ -1465,18 +1465,18 @@ packages:
     dependency: "direct main"
     description:
       name: zego_uikit_signaling_plugin
-      sha256: "237481d3fc6980cfcbcfc419ec9536daad18ba481107b07136d32bf26ec770e7"
+      sha256: "9b6287c76ebca3e1837dde233f5a58ce9465a2c14579ca604f02601f19984288"
       url: "https://pub.dev"
     source: hosted
-    version: "2.6.1"
+    version: "2.6.6"
   zego_zim:
     dependency: transitive
     description:
       name: zego_zim
-      sha256: "7389d1b1a86853a0d583a78a2db815456c1ba572c0ddce581f5ede3e5ed60205"
+      sha256: "59d209d0a94debbe845335f983078d7aed9ccbaf68cc4fd0079627b6d254ae2b"
       url: "https://pub.dev"
     source: hosted
-    version: "2.10.0+4"
+    version: "2.11.0+1"
   zego_zpns:
     dependency: transitive
     description:

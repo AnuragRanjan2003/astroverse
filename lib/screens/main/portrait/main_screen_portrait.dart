@@ -31,7 +31,7 @@ class MainScreenPortrait extends StatelessWidget {
 
     final tabs = [
       const GButton(
-        icon: FontAwesomeIcons.globe,
+        icon: FontAwesomeIcons.message,
         iconSize: 20,
         iconColor: ProjectColors.onBackground,
         padding: EdgeInsets.symmetric(vertical: 14, horizontal: 20),
@@ -55,37 +55,46 @@ class MainScreenPortrait extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: ProjectColors.background,
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        color: Colors.transparent,
-        child: GNav(
-          backgroundColor: Colors.transparent,
-          gap: 10,
-          onTabChange: (e) {
-            pageController.animateToPage(e,
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.linear);
-            auth.page.value = e;
-          },
-          tabs: tabs,
-          activeColor: Colors.lightBlue,
-          tabBackgroundColor: Colors.white,
-        ),
-      ),
       body: SafeArea(
         child: SizedBox(
             width: wd,
-            height: ht * 0.9,
-            child: PageView(
-              controller: pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                const DiscoverScreen(color: ProjectColors.background),
-                const MartScreen(),
-                PeopleScreenPortrait(cons: cons),
-                const PurchasesScreen()
-              ],
-            )),
+            child: Stack(children: [
+              PageView(
+                controller: pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  const DiscoverScreen(),
+                  const MartScreen(),
+                  PeopleScreenPortrait(cons: cons),
+                  const PurchasesScreen()
+                ],
+              ),
+              Align(alignment:Alignment.bottomCenter,child: buildBottomNav(pageController, auth, tabs))
+            ])),
+      ),
+    );
+  }
+
+  Container buildBottomNav(PageController pageController, AuthController auth, List<GButton> tabs) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      margin: const EdgeInsets.only(left: 15, right: 15,bottom: 20),
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(25)),
+        color: Colors.white
+      ),
+      child: GNav(
+        backgroundColor: Colors.transparent,
+        gap: 10,
+        onTabChange: (e) {
+          pageController.animateToPage(e,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.linear);
+          auth.page.value = e;
+        },
+        tabs: tabs,
+        activeColor: Colors.lightBlue,
+        tabBackgroundColor: Colors.white,
       ),
     );
   }

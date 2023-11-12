@@ -15,6 +15,7 @@ class PurchaseController extends GetxController {
   static const _maxPostLimit = 50;
   Rx<bool> nothingToShow = false.obs;
   Rx<bool> loadingMorePosts = false.obs;
+  RxString searchText = "".obs;
 
   void fetchPurchases(String buyerId) {
     loadingMorePosts.value = true;

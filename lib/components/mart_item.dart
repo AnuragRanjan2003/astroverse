@@ -16,7 +16,7 @@ class MartItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       surfaceTintColor: Colors.white,
-      elevation: 8,
+      elevation: 2,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(_radius))),
       child: Container(
